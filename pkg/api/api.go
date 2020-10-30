@@ -18,6 +18,13 @@ func New(rc *redis.Client) (*Service, error) {
 	return &Service{rc: rc}, nil
 }
 
+func (s *Service) Init(r *mux.Router) error {
+	r.Path("/env").Methods("GET").HandlerFunc(s.EnvHandler)
+	r.Path("/lrange/{key}").Methods("GET").HandlerFunc(s.ListRangeHandler)
+	r.Path("/lpush/{key}/{value}").Methods("GET").HandlerFunc(s.ListPushHandler)
+	return nil
+}
+
 func HandleError(result interface{}, err error) (r interface{}) {
 	if err != nil {
 		panic(err)

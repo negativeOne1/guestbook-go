@@ -17,11 +17,9 @@ func main() {
 	})
 	defer rc.Close()
 
-	s, _ := api.New(rc)
 	r := mux.NewRouter()
-	r.Path("/env").Methods("GET").HandlerFunc(s.EnvHandler)
-	r.Path("/lrange/{key}").Methods("GET").HandlerFunc(s.ListRangeHandler)
-	r.Path("/lpush/{key}/{value}").Methods("GET").HandlerFunc(s.ListPushHandler)
+	s, _ := api.New(rc)
+	s.Init(r)
 
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":8000", nil))
