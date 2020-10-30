@@ -1,4 +1,4 @@
-module guestbook-go
+module github.com/negativeOne1/guestbook-go
 
 go 1.15
 
