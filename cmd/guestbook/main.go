@@ -28,12 +28,12 @@ func main() {
 
 	r := mux.NewRouter()
 	r.Use(loggingMiddleware)
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("public")))
 	rr := r.PathPrefix("/api").Subrouter()
 
-	s, _ := api.New(rc)
-	s.Init(rr)
+	a, _ := api.New(rc)
+	a.Init(rr)
 
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("public")))
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
