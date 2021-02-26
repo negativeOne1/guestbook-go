@@ -22,7 +22,7 @@ ifneq ($(V),1)
 	Q = @
 endif
 
-IMG ?= guestboook-go:latest
+IMG ?= guestbook-go:latest
 
 all: help
 
@@ -64,11 +64,6 @@ lint-fix: $(GOLANGCI_LINT) ## Run golangci-lint linter and perform fixes
 
 
 ##@ Publishing
-.PHONY: docker-build
-docker-build: ## Build the docker image
+.PHONY: build-docker
+build-docker: build ## Build the docker image
 	docker build . -t ${IMG}
-
-.PHONY: docker-push
-docker-push: ## Push the docker image
-	docker push ${IMG}
-

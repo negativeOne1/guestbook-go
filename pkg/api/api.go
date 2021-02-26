@@ -23,6 +23,8 @@ func (s *Service) Init(r *mux.Router) {
 	r.Path("/env").Methods("GET").HandlerFunc(s.EnvHandler)
 	r.Path("/lrange/{key}").Methods("GET").HandlerFunc(s.ListRangeHandler)
 	r.Path("/rpush/{key}/{value}").Methods("GET").HandlerFunc(s.ListPushHandler)
+	r.Path("/livez").Methods("GET").HandlerFunc(s.LivezHandler)
+	r.Path("/readyz").Methods("GET").HandlerFunc(s.ReadyzHandler)
 }
 
 func (s *Service) ListRangeHandler(rw http.ResponseWriter, req *http.Request) {
@@ -75,4 +77,16 @@ func (s *Service) EnvHandler(rw http.ResponseWriter, req *http.Request) {
 		log.Err(err).Msg("can't write output")
 		return
 	}
+}
+
+func (s *Service) ReadyzHandler(rw http.ResponseWriter, req *http.Request) {
+	_, err := s.rc.Ping().Result()
+	if err != nil {
+		http.Error(rw, "[-] Redis not found", http.StatusServiceUnavailable)
+		return
+	}
+	_, _ = rw.Write([]byte("[+] Redis ready"))
+}
+
+func (s *Service) LivezHandler(rw http.ResponseWriter, req *http.Request) {
 }
