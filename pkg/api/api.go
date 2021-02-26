@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
@@ -18,30 +19,30 @@ func New(rc *redis.Client) (*Service, error) {
 	return &Service{rc: rc}, nil
 }
 
-func (s *Service) Init(r *mux.Router) error {
+func (s *Service) Init(r *mux.Router) {
 	r.Path("/env").Methods("GET").HandlerFunc(s.EnvHandler)
 	r.Path("/lrange/{key}").Methods("GET").HandlerFunc(s.ListRangeHandler)
 	r.Path("/rpush/{key}/{value}").Methods("GET").HandlerFunc(s.ListPushHandler)
-
-	return nil
-}
-
-func HandleError(result interface{}, err error) (r interface{}) {
-	if err != nil {
-		panic(err)
-	}
-	return result
 }
 
 func (s *Service) ListRangeHandler(rw http.ResponseWriter, req *http.Request) {
 	k := mux.Vars(req)["key"]
 	v, err := s.rc.LRange(k, 0, -1).Result()
 	if err != nil {
-		HandleError(nil, err)
+		log.Err(err).Msgf("could not get value for %s", k)
+		return
 	}
 
-	membersJSON := HandleError(json.MarshalIndent(v, "", "  ")).([]byte)
-	rw.Write(membersJSON)
+	membersJSON, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		log.Err(err).Msg("can't marshal json")
+		return
+	}
+
+	if _, err := rw.Write([]byte(membersJSON)); err != nil {
+		log.Err(err).Msg("can't write output")
+		return
+	}
 }
 
 func (s *Service) ListPushHandler(rw http.ResponseWriter, req *http.Request) {
@@ -49,8 +50,10 @@ func (s *Service) ListPushHandler(rw http.ResponseWriter, req *http.Request) {
 	v := mux.Vars(req)["value"]
 	_, err := s.rc.LPush(k, v).Result()
 	if err != nil {
-		HandleError(nil, err)
+		log.Err(err).Msgf("can't get entry for k: %s, v: %s", k, v)
+		return
 	}
+
 	s.ListRangeHandler(rw, req)
 }
 
@@ -62,7 +65,14 @@ func (s *Service) EnvHandler(rw http.ResponseWriter, req *http.Request) {
 		val := strings.Join(splits[1:], "=")
 		environment[key] = val
 	}
+	envJSON, err := json.MarshalIndent(environment, "", "  ")
+	if err != nil {
+		log.Err(err).Msg("can't marshal json")
+		return
+	}
 
-	envJSON := HandleError(json.MarshalIndent(environment, "", "  ")).([]byte)
-	rw.Write(envJSON)
+	if _, err := rw.Write([]byte(envJSON)); err != nil {
+		log.Err(err).Msg("can't write output")
+		return
+	}
 }

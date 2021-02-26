@@ -7,4 +7,5 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
+	github.com/rs/zerolog v1.20.0
 )
